@@ -24,6 +24,7 @@ cMainGame::cMainGame()
 	, m_pMesh(NULL)
 	, m_pFrustum(NULL)
 	, m_pPyramid(NULL)
+	, m_vPyramidPos(5, 0, 6)
 {
 	//D3DXMatrixRotationQuaternion(¾Æ¿ôÇ²¸ÅÆ®¸¯½º, ÀÎÇ² Äõ);
 	//D3DXQuaternionSlerp(¾Æ¿ôÇ², Äõ1, Äõ2, f)
@@ -75,23 +76,24 @@ void cMainGame::Setup()
 	//cObjLoader l;
 	//l.Load("map/Map.obj", m_vecGroup);
 	//m_pMesh = l.LoadMesh("map/Map.obj", m_vecMtlTex);
-	/*
+	
 	D3DXCreateSphere(g_pD3DDevice, 0.5, 100, 100, &m_pMesh, NULL);
 
-	for (int x = -10; x <= 10; ++x)
+	for (int x = -5; x <= 5; ++x)
 	{
-		for (int y = -10; y <= 10; ++y)
+		for (int y = -5; y <= 5; ++y)
 		{
-			for (int z = -10; z <= 10; ++z)
+			for (int z = -5; z <= 5; ++z)
 			{
 				ST_SPHERE s;
 				s.vCenter = D3DXVECTOR3(x * 3, y * 3, z * 3);
 				s.fRadius = 0.5;
+				s.isPicked = false;
 				m_vecSphere.push_back(s);
 			}
 		}
 	}
-	*/
+	
 	ST_PC_VERTEX v;
 	
 	v.p = D3DXVECTOR3(-1, 1, 0); m_vecRect1.push_back(v);
@@ -115,17 +117,17 @@ void cMainGame::Setup()
 	}
 
 	v.c = D3DCOLOR_XRGB(50, 50, 50);
-	v.p = D3DXVECTOR3(-30, -30, 1);
+	v.p = D3DXVECTOR3(-10, 0, 10);
 	m_vecPlane.push_back(v);
-	v.p = D3DXVECTOR3(-30, 30, 1);
+	v.p = D3DXVECTOR3(10, 0, 10);
 	m_vecPlane.push_back(v);
-	v.p = D3DXVECTOR3(30, 30, 1);
+	v.p = D3DXVECTOR3(10, 0, -10);
 	m_vecPlane.push_back(v);
-	v.p = D3DXVECTOR3(-30, -30, 1);
+	v.p = D3DXVECTOR3(-10, 0, 10);
 	m_vecPlane.push_back(v);
-	v.p = D3DXVECTOR3(30, 30, 1);
+	v.p = D3DXVECTOR3(10, 0, -10);
 	m_vecPlane.push_back(v);
-	v.p = D3DXVECTOR3(30, -30, 1);
+	v.p = D3DXVECTOR3(-10, 0, -10);
 	m_vecPlane.push_back(v);
 
 	//128, 23, 120, 55
@@ -166,8 +168,11 @@ void cMainGame::Setup()
 	SAFE_RELEASE(pMesh);
 
 	ZeroMemory(&m_stMtl, sizeof(D3DMATERIAL9));
-	m_stMtl.Ambient = m_stMtl.Diffuse = m_stMtl.Specular = D3DXCOLOR(0.8f, 0.0f, 0.0f, 1.0f);
+	m_stMtl.Ambient = m_stMtl.Diffuse = m_stMtl.Specular = D3DXCOLOR(0.8f, 0.8f, 0.8f, 1.0f);
 
+	ZeroMemory(&m_stPickedMtl, sizeof(D3DMATERIAL9));
+	m_stPickedMtl.Ambient = m_stPickedMtl.Diffuse = m_stPickedMtl.Specular = D3DXCOLOR(0.8f, 0.0f, 0.0f, 1.0f);
+	
 	m_pPyramid = new cPyramid();
 	D3DXMATRIX matWorld, matS, matR, matT;
 	D3DXMatrixScaling(&matS, 0.2f, 1.0f, 0.2f);
@@ -208,8 +213,8 @@ void cMainGame::Update()
 
 void cMainGame::Render()
 {
-	//if (m_pGrid)
-	//	m_pGrid->Render();
+	if (m_pGrid)
+		m_pGrid->Render();
 
 	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, false);
 	if (m_pPyramid)
@@ -224,23 +229,20 @@ void cMainGame::Render()
 	g_pD3DDevice->SetFVF(ST_PC_VERTEX::FVF);
 	g_pD3DDevice->DrawPrimitiveUP(D3DPT_TRIANGLELIST, 2, &m_vecPlane[0], sizeof(ST_PC_VERTEX));
 	//g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, true);
+	
 	//g_pD3DDevice->SetMaterial(&m_stMtl);
-	/*
+	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, true);
 	for each(auto p in m_vecSphere)
 	{
-		
-		if (GetKeyState(VK_SPACE) & 0x8000)
+		if (p.isPicked)
 		{
-			if (m_pFrustum->IsIn(&p))
-		{
-			matWorld._41 = p.vCenter.x;
-			matWorld._42 = p.vCenter.y;
-			matWorld._43 = p.vCenter.z;
-			g_pD3DDevice->SetTransform(D3DTS_WORLD, &matWorld);
-			m_pMesh->DrawSubset(0);
-		}
+			g_pD3DDevice->SetMaterial(&m_stPickedMtl);
 		}
 		else
+		{
+			g_pD3DDevice->SetMaterial(&m_stMtl);
+		}
+		if (m_pFrustum->IsIn(&p))
 		{
 			matWorld._41 = p.vCenter.x;
 			matWorld._42 = p.vCenter.y;
@@ -249,7 +251,7 @@ void cMainGame::Render()
 			m_pMesh->DrawSubset(0);
 		}
 	}
-	*/
+	
 	/*
 	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, true);
 	ULONGLONG ullStart, ullFinish;
@@ -344,31 +346,14 @@ void cMainGame::MsgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 	case WM_MOUSEMOVE:
 	{
-		cRay r = cRay::GetRayAtWorld(LOWORD(lParam), HIWORD(lParam));
-		float u, v, d;
-		for (int i = 0; i < 6; i += 3)
-		{
-			if (D3DXIntersectTri(&m_vecPlane[i].p, &m_vecPlane[i + 1].p, &m_vecPlane[i + 2].p, &r.m_vRayOrg, &r.m_vRayDir, &u, &v, &d))
-			{
-				D3DXVECTOR3 vPickedPosition = r.m_vRayOrg + r.m_vRayDir * d;
-				D3DXMatrixLookAtLH(&m_matWorld, &D3DXVECTOR3(0, 0, 0), &vPickedPosition, &D3DXVECTOR3(0, 1, 0));
-				D3DXMatrixTranspose(&m_matWorld, &m_matWorld);
-			}
-		}
 	}
 	break;
 	case WM_LBUTTONDOWN:
 	{	
 		cRay r = cRay::GetRayAtWorld(LOWORD(lParam), HIWORD(lParam));
-		float u, v, d;
-		for (int i = 0; i < 6; i += 3)
+		for (size_t i = 0 ; i < m_vecSphere.size(); ++i)
 		{
-			if (D3DXIntersectTri(&m_vecPlane[i].p, &m_vecPlane[i + 1].p, &m_vecPlane[i + 2].p, &r.m_vRayOrg, &r.m_vRayDir, &u, &v, &d))
-			{
-				D3DXVECTOR3 vPickedPosition = r.m_vRayOrg + r.m_vRayDir * d;
-				D3DXMatrixLookAtLH(&m_matWorld, &D3DXVECTOR3(0, 0, 0), &vPickedPosition, &D3DXVECTOR3(0, 1, 0));
-				D3DXMatrixTranspose(&m_matWorld, &m_matWorld);
-			}
+			m_vecSphere[i].isPicked = r.IsPicked(&m_vecSphere[i]);
 		}
 	}
 	break;

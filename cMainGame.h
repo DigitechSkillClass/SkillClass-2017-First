@@ -19,12 +19,14 @@ private:
 	cCharController*	m_pCharController;
 	cCamera*			m_pCamera;
 	D3DMATERIAL9		m_stMtl;
+	D3DMATERIAL9		m_stPickedMtl;
 	cFrame*				m_pRootFrame;
 	cHeightMap*			m_pHeightMap;
 	LPD3DXMESH			m_pMesh;
 	cFrustum*			m_pFrustum;
 	cPyramid*			m_pPyramid;
 	D3DXMATRIX			m_matWorld;
+	D3DXVECTOR3			m_vPyramidPos;
 
 	std::vector<ST_PC_VERTEX>	m_vecRect1;
 	std::vector<ST_PC_VERTEX>	m_vecRect2;

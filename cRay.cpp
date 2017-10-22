@@ -39,3 +39,13 @@ cRay cRay::GetRayAtWorld(int nScreenX, int nScreenY)
 	D3DXVec3Normalize(&r.m_vRayDir, &r.m_vRayDir);
 	return r;
 }
+
+bool cRay::IsPicked(ST_SPHERE * pSphere)
+{
+	D3DXVECTOR3 vLocalRayRog = m_vRayOrg - pSphere->vCenter;
+	float vv = D3DXVec3Dot(&m_vRayDir, &m_vRayDir);
+	float qv = D3DXVec3Dot(&vLocalRayRog, &m_vRayDir);
+	float qq = D3DXVec3Dot(&vLocalRayRog, &vLocalRayRog);
+	float rr = pSphere->fRadius * pSphere->fRadius;
+	return qv * qv - vv * (qq - rr) >= 0;
+}

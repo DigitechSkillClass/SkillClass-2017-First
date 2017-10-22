@@ -10,5 +10,6 @@ public:
 
 	static cRay GetRayAtView(int nScreenX, int nScreenY);
 	static cRay GetRayAtWorld(int nScreenX, int nScreenY);
+	bool IsPicked(ST_SPHERE* pSphere);
 };
 

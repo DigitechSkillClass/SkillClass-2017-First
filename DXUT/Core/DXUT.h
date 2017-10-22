@@ -406,6 +406,7 @@ struct ST_SPHERE
 {
 	D3DXVECTOR3 vCenter;
 	float		fRadius;
+	bool		isPicked;
 };
 
 #define CC_SYNTHESIZE(varType, varName, funName) protected: varType varName;\
